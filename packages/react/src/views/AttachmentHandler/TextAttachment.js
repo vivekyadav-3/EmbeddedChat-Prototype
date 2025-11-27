@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { css } from '@emotion/react';
 import PropTypes from 'prop-types';
 import { Box, Avatar, useTheme, Icon } from '@embeddedchat/ui-elements';
+import { parse } from '@rocket.chat/message-parser';
 import AttachmentMetadata from './AttachmentMetadata';
 import RCContext from '../../context/RCInstance';
 import { Markdown } from '../Markdown';
@@ -114,7 +115,7 @@ const FileAttachment = ({
               ) : (
                 <Markdown
                   body={attachment.text}
-                  md={attachment.md}
+                  md={parse(attachment?.text)}
                   isReaction={false}
                 />
               )
