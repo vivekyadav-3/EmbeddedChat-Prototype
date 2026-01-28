@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { css } from '@emotion/react';
 import { isSameDay } from 'date-fns';
@@ -23,12 +23,22 @@ const MessageList = ({
   const isMessageLoaded = useMessageStore((state) => state.isMessageLoaded);
   const { theme } = useTheme();
 
-  const isMessageNewDay = (current, previous) =>
-    !previous || !isSameDay(new Date(current.ts), new Date(previous.ts));
+  const filteredMessages = useMemo(
+    () => messages.filter((msg) => !msg.tmid).reverse(),
+    [messages]
+  );
+  
+  const reportedMessage = useMemo(
+    () => (messageToReport ? messages.find((msg) => msg._id === messageToReport) : null),
+    [messages, messageToReport]
+  );
 
-  const filteredMessages = messages.filter((msg) => !msg.tmid);
-
-  const reportedMessage = messages.find((msg) => msg._id === messageToReport);
+  const isMessageNewDay = (current, previous) => {
+    if (!previous) return true;
+    const currentDay = new Date(current.ts).setHours(0, 0, 0, 0);
+    const previousDay = new Date(previous.ts).setHours(0, 0, 0, 0);
+    return currentDay !== previousDay;
+  };
 
   return (
     <>
@@ -76,10 +86,7 @@ const MessageList = ({
               <Throbber />
             </Box>
           )}
-          {filteredMessages
-            .slice()
-            .reverse()
-            .map((msg, index, arr) => {
+          {filteredMessages.map((msg, index, arr) => {
               const prev = arr[index - 1];
               const next = arr[index + 1];
 
