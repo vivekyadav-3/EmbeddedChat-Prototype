@@ -34,8 +34,7 @@ export const MessageAggregator = ({
   type = 'message',
   viewType = 'Sidebar',
 }) => {
-  const { theme } = useTheme();
-  const { mode } = useTheme();
+  const { theme, mode } = useTheme();
   const styles = getMessageAggregatorStyles(theme);
   const setExclusiveState = useSetExclusiveState();
   const { ECOptions } = useRCContext();
@@ -128,13 +127,20 @@ export const MessageAggregator = ({
     }
   };
 
-  const isMessageNewDay = (current, previous) =>
-    !previous ||
-    shouldRender(previous) ||
-    !isSameDay(new Date(current.ts), new Date(previous.ts));
+  const isMessageNewDay = (current, previous) => {
+    if (!previous || shouldRender(previous)) return true;
+    const currentDay = new Date(current.ts).setHours(0, 0, 0, 0);
+    const previousDay = new Date(previous.ts).setHours(0, 0, 0, 0);
+    return currentDay !== previousDay;
+  };
 
   const noMessages = messageList?.length === 0 || !messageRendered;
   const ViewComponent = viewType === 'Popup' ? Popup : Sidebar;
+
+  const uniqueMessageList = useMemo(
+    () => [...new Map(messageList.map((msg) => [msg._id, msg])).values()],
+    [messageList]
+  );
 
   return (
     <ViewComponent
@@ -167,8 +173,7 @@ export const MessageAggregator = ({
             <NoMessagesIndicator iconName={iconName} message={noMessageInfo} />
           )}
 
-          {[...new Map(messageList.map((msg) => [msg._id, msg])).values()].map(
-            (msg, index, arr) => {
+          {uniqueMessageList.map((msg, index, arr) => {
               const newDay = isMessageNewDay(msg, arr[index - 1]);
               if (!messageRendered && shouldRender(msg)) {
                 setMessageRendered(true);
